@@ -1,0 +1,2167 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THE ROYAL PLATE — Restaurant & Café | Interactive 3D QR Menu</title>
+    
+    <!-- Google Fonts: Playfair Display, Great Vibes & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        obsidian: '#0b0d10',
+                        charcoal: '#14171d',
+                        cardbg: 'rgba(20, 23, 30, 0.78)',
+                        gold: {
+                            DEFAULT: '#d4af37',
+                            light: '#f3d06b',
+                            dark: '#aa8922',
+                            muted: 'rgba(212, 175, 55, 0.15)'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+                        script: ['"Great Vibes"', 'cursive'],
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Base Luxury Styling */
+        :root {
+            --gold: #d4af37;
+            --obsidian: #0b0d10;
+        }
+
+        body {
+            background-color: #0b0d10;
+            color: #f3f4f6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Ambient Background Glows */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 15% 10%, rgba(212, 175, 55, 0.09) 0%, transparent 45%),
+                radial-gradient(circle at 85% 80%, rgba(212, 175, 55, 0.07) 0%, transparent 50%),
+                #0b0d10;
+            pointer-events: none;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(20, 23, 30, 0.78);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-gold {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.18), rgba(20, 23, 30, 0.88));
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+
+        /* 3D Card Architecture */
+        .card-3d-wrapper {
+            perspective: 1000px;
+        }
+
+        .card-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.18s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.3s ease;
+            will-change: transform;
+        }
+
+        .card-3d.resetting {
+            transition: transform 0.55s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s ease;
+        }
+
+        .card-3d:hover {
+            box-shadow: 0 22px 45px -12px rgba(0, 0, 0, 0.9), 0 0 26px rgba(212, 175, 55, 0.16);
+            border-color: rgba(212, 175, 55, 0.4);
+        }
+
+        /* Floating Z-Space Elements inside 3D Card */
+        .float-z-sm {
+            transform: translateZ(18px);
+        }
+
+        /* Dynamic Sheen Glare on Card Tilt */
+        .card-glare {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.14), transparent 65%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 20;
+        }
+
+        /* ========================================================= */
+        /* 4-ANGLE STUDIO CAMERA RIG ON DARK SLATE RESTAURANT TABLE  */
+        /* ========================================================= */
+        .studio-table-surface {
+            background: 
+                radial-gradient(circle at 50% 55%, rgba(35, 39, 48, 0.9) 0%, #090b0e 85%);
+            perspective: 950px;
+            overflow: hidden;
+        }
+
+        .studio-lamp-glow {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            transition: background 0.55s ease;
+            z-index: 5;
+        }
+
+        /* Camera Angle 0: 45-Degree Hero Shot */
+        .cam-angle-0 {
+            transform: perspective(900px) rotateX(8deg) rotateY(-4deg) scale(1.04) translate(0%, 0%);
+            filter: contrast(1.05) saturate(1.08) brightness(1);
+        }
+        .lamp-angle-0 {
+            background: radial-gradient(circle at 30% 25%, rgba(255, 232, 185, 0.14), transparent 60%);
+        }
+
+        /* Camera Angle 1: Top-Down Flat Lay */
+        .cam-angle-1 {
+            transform: perspective(900px) rotateX(22deg) rotateY(0deg) rotateZ(-4deg) scale(1.16) translate(0%, -3%);
+            filter: contrast(1.08) saturate(1.1) brightness(1.03);
+        }
+        .lamp-angle-1 {
+            background: radial-gradient(circle at 50% 50%, rgba(255, 240, 200, 0.16), transparent 65%);
+        }
+
+        /* Camera Angle 2: Macro Texture Close-Up */
+        .cam-angle-2 {
+            transform: perspective(900px) rotateX(3deg) rotateY(6deg) scale(1.36) translate(-4%, -3%);
+            filter: contrast(1.12) saturate(1.15) brightness(1.04);
+        }
+        .lamp-angle-2 {
+            background: radial-gradient(circle at 72% 30%, rgba(212, 175, 55, 0.18), transparent 58%);
+        }
+
+        /* Camera Angle 3: Side Plating View */
+        .cam-angle-3 {
+            transform: perspective(900px) rotateX(-7deg) rotateY(16deg) scale(1.14) translate(4%, 2%);
+            filter: contrast(1.06) saturate(1.06) brightness(0.98);
+        }
+        .lamp-angle-3 {
+            background: radial-gradient(circle at 80% 60%, rgba(255, 225, 175, 0.15), transparent 62%);
+        }
+
+        /* 3D Modal Interactive Drag Platter Stage */
+        .stage-3d {
+            perspective: 1200px;
+            cursor: grab;
+        }
+        .stage-3d:active {
+            cursor: grabbing;
+        }
+
+        .angle-viewer-frame {
+            transform-style: preserve-3d;
+            transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), filter 0.45s ease, opacity 0.3s ease;
+        }
+
+        /* Custom Scrollbars */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Subtle Gold Shimmer Animation */
+        @keyframes goldShimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        .text-gold-shimmer {
+            background: linear-gradient(90deg, #d4af37 0%, #fae69e 50%, #d4af37 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: goldShimmer 5s linear infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-28 selection:bg-gold selection:text-obsidian">
+    <div class="ambient-bg"></div>
+
+    <!-- ========================================================= -->
+    <!-- OWNER MODE ACTIVE BANNER (Hidden until authenticated)     -->
+    <!-- ========================================================= -->
+    <div id="owner-banner" class="hidden sticky top-0 z-50 bg-gradient-to-r from-[#1a160b] via-[#2b220d] to-[#1a160b] border-b border-gold/50 px-4 py-2.5 shadow-lg shadow-black/60">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <span class="relative flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-gold"></span>
+                </span>
+                <span class="text-xs sm:text-sm font-semibold tracking-wider uppercase text-gold-light">Owner Mode Active</span>
+                <span class="hidden md:inline text-xs text-gray-400 border-l border-white/15 pl-2">Live Menu Management</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="openAddDishModal()" class="flex items-center gap-1.5 bg-gold hover:bg-gold-light text-obsidian font-semibold text-xs px-3 py-1.5 rounded-full transition shadow-md cursor-pointer">
+                    <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                    <span>Add New Dish</span>
+                </button>
+                <button onclick="confirmResetMenu()" class="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-gray-200 text-xs px-2.5 py-1.5 rounded-full transition cursor-pointer" title="Restore sample dishes">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                    <span class="hidden sm:inline">Reset</span>
+                </button>
+                <button onclick="logoutOwner()" class="flex items-center gap-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 text-xs px-3 py-1.5 rounded-full transition cursor-pointer">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- TOP HEADER WITH TOP-LEFT OWNER LOGIN & TABLE BADGE        -->
+    <!-- ========================================================= -->
+    <header class="relative pt-4 pb-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <!-- Top Utility Row -->
+        <div class="flex items-center justify-between mb-6">
+            <!-- Top-Left Owner Login Trigger -->
+            <button id="owner-login-btn" onclick="openLoginModal()" class="group flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-panel hover:border-gold/50 text-xs text-gray-400 hover:text-gold transition-all duration-300 cursor-pointer">
+                <i data-lucide="lock" class="w-3.5 h-3.5 text-gold/70 group-hover:text-gold transition"></i>
+                <span class="font-medium tracking-wide">Owner Login</span>
+            </button>
+
+            <!-- Table QR Indicator & Top Cart Trigger -->
+            <div class="flex items-center gap-2.5">
+                <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-panel text-xs text-gray-300">
+                    <i data-lucide="qr-code" class="w-3.5 h-3.5 text-gold"></i>
+                    <span>Table <strong id="header-table-num" class="text-gold">07</strong></span>
+                </div>
+                <button onclick="openCartDrawer()" class="relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full glass-gold hover:border-gold text-xs font-semibold text-gold-light transition cursor-pointer">
+                    <i data-lucide="shopping-bag" class="w-3.5 h-3.5 text-gold"></i>
+                    <span class="hidden sm:inline">Order</span>
+                    <span id="top-cart-badge" class="bg-gold text-obsidian font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Brand Hero Title (Matching THE ROYAL PLATE Menu Card) -->
+        <div class="text-center max-w-2xl mx-auto space-y-2">
+            <!-- Royal Gold Crown SVG -->
+            <div class="flex justify-center mb-1">
+                <svg class="w-11 h-8 text-gold drop-shadow-[0_0_10px_rgba(212,175,55,0.45)]" viewBox="0 0 64 44" fill="currentColor">
+                    <path d="M6 36L2 12L18 22L32 6L46 22L62 12L58 36H6ZM8 40H56V44H8V40Z"/>
+                    <circle cx="2" cy="9" r="2.5"/>
+                    <circle cx="32" cy="3" r="3"/>
+                    <circle cx="62" cy="9" r="2.5"/>
+                </svg>
+            </div>
+            <h1 class="font-serif text-3xl sm:text-5xl font-bold tracking-wider uppercase text-gold-shimmer">
+                THE ROYAL PLATE
+            </h1>
+            <div class="flex items-center justify-center gap-3 text-[11px] sm:text-xs tracking-[0.28em] uppercase text-gold/90 font-medium">
+                <span class="h-[1px] w-8 sm:w-12 bg-gold/40"></span>
+                <span>Restaurant & Café</span>
+                <span class="h-[1px] w-8 sm:w-12 bg-gold/40"></span>
+            </div>
+            <p class="font-script text-2xl sm:text-3xl text-white/95 pt-0.5">
+                Good Food. Great Moments.
+            </p>
+            <p class="text-[10px] sm:text-[11px] uppercase tracking-[0.25em] text-gray-400">
+                Est. 2024 • Fine Dining • All Prices in INR (₹)
+            </p>
+        </div>
+    </header>
+
+    <!-- ========================================================= -->
+    <!-- SEARCH & FILTER CONTROL BAR                               -->
+    <!-- ========================================================= -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="glass-panel rounded-3xl p-4 sm:p-5 space-y-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <!-- Live Search Input -->
+                <div class="relative flex-1 max-w-md">
+                    <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <input
+                        type="text"
+                        id="search-input"
+                        oninput="handleSearch(this.value)"
+                        placeholder="Search dishes, ingredients, or courses..."
+                        class="w-full bg-obsidian/90 border border-white/10 focus:border-gold/60 rounded-full pl-10 pr-9 py-2 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none transition"
+                    >
+                    <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white cursor-pointer">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+
+                <!-- Dietary & Special Pills -->
+                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
+                    <button onclick="setDietaryFilter('all')" data-diet="all" class="diet-pill active-diet flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition whitespace-nowrap cursor-pointer bg-gold text-obsidian border-gold">
+                        <span>All Items</span>
+                    </button>
+                    <button onclick="setDietaryFilter('veg')" data-diet="veg" class="diet-pill flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border border-white/10 bg-white/5 text-gray-300 hover:border-emerald-500/50 transition whitespace-nowrap cursor-pointer">
+                        <span class="w-2.5 h-2.5 rounded-sm border border-emerald-500 flex items-center justify-center">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        </span>
+                        <span>Pure Veg</span>
+                    </button>
+                    <button onclick="setDietaryFilter('non-veg')" data-diet="non-veg" class="diet-pill flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border border-white/10 bg-white/5 text-gray-300 hover:border-rose-500/50 transition whitespace-nowrap cursor-pointer">
+                        <span class="w-2.5 h-2.5 rounded-sm border border-rose-500 flex items-center justify-center">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                        </span>
+                        <span>Non-Veg</span>
+                    </button>
+                    <button onclick="setDietaryFilter('special')" data-diet="special" class="diet-pill flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border border-white/10 bg-white/5 text-gray-300 hover:border-gold/50 transition whitespace-nowrap cursor-pointer">
+                        <i data-lucide="award" class="w-3.5 h-3.5 text-gold"></i>
+                        <span>Chef's Specials</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Row 2: Category Tabs (Exact 5 Categories from Menu) -->
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pt-1 border-t border-white/5">
+                <button onclick="setCategoryFilter('All')" data-cat="All" class="cat-tab px-4 py-1.5 rounded-xl text-xs font-semibold transition whitespace-nowrap cursor-pointer bg-white/12 text-gold border border-gold/30">
+                    All Courses (18)
+                </button>
+                <button onclick="setCategoryFilter('Starters')" data-cat="Starters" class="cat-tab px-4 py-1.5 rounded-xl text-xs font-medium text-gray-400 hover:text-white hover:bg-white/5 border border-transparent transition whitespace-nowrap cursor-pointer">
+                    Starters
+                </button>
+                <button onclick="setCategoryFilter('Main Course')" data-cat="Main Course" class="cat-tab px-4 py-1.5 rounded-xl text-xs font-medium text-gray-400 hover:text-white hover:bg-white/5 border border-transparent transition whitespace-nowrap cursor-pointer">
+                    Main Course
+                </button>
+                <button onclick="setCategoryFilter('Pizza & Pasta')" data-cat="Pizza & Pasta" class="cat-tab px-4 py-1.5 rounded-xl text-xs font-medium text-gray-400 hover:text-white hover:bg-white/5 border border-transparent transition whitespace-nowrap cursor-pointer">
+                    Pizza & Pasta
+                </button>
+                <button onclick="setCategoryFilter('Desserts')" data-cat="Desserts" class="cat-tab px-4 py-1.5 rounded-xl text-xs font-medium text-gray-400 hover:text-white hover:bg-white/5 border border-transparent transition whitespace-nowrap cursor-pointer">
+                    Desserts
+                </button>
+                <button onclick="setCategoryFilter('Beverages')" data-cat="Beverages" class="cat-tab px-4 py-1.5 rounded-xl text-xs font-medium text-gray-400 hover:text-white hover:bg-white/5 border border-transparent transition whitespace-nowrap cursor-pointer">
+                    Beverages
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- MAIN MENU GRID (3D INTERACTIVE DISH CARDS)                -->
+    <!-- ========================================================= -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-7">
+        <!-- Results Counter -->
+        <div class="flex items-center justify-between mb-5">
+            <h2 id="current-category-heading" class="font-serif text-xl sm:text-2xl font-semibold text-white">All Courses</h2>
+            <span id="dish-count-label" class="text-xs text-gray-400">Showing 18 creations</span>
+        </div>
+
+        <!-- Dish Grid -->
+        <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+            <!-- Dish cards dynamically injected here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden text-center py-16 px-4 glass-panel rounded-3xl my-6">
+            <div class="w-14 h-14 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center mx-auto mb-4 text-gold">
+                <i data-lucide="utensils-crossed" class="w-6 h-6"></i>
+            </div>
+            <h3 class="font-serif text-xl text-white mb-1">No matching dishes found</h3>
+            <p class="text-xs sm:text-sm text-gray-400 mb-5">Try adjusting your dietary filters or search keywords.</p>
+            <button onclick="resetAllFilters()" class="px-5 py-2 rounded-full bg-gold text-obsidian text-xs font-semibold hover:bg-gold-light transition cursor-pointer">
+                Reset All Filters
+            </button>
+        </div>
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- FLOATING BOTTOM CART BAR (Mobile & Desktop Quick Access)  -->
+    <!-- ========================================================= -->
+    <div id="floating-cart-bar" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-lg transition-all duration-300 translate-y-28 opacity-0 pointer-events-none">
+        <button onclick="openCartDrawer()" class="w-full glass-gold shadow-2xl shadow-black/80 rounded-2xl px-4 py-3.5 flex items-center justify-between border border-gold/50 hover:border-gold transition cursor-pointer">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gold text-obsidian font-bold flex items-center justify-center text-sm shadow-inner" id="float-cart-count">
+                    0
+                </div>
+                <div class="text-left">
+                    <p class="text-xs text-gold-light font-semibold">View Table Order</p>
+                    <p class="text-[11px] text-gray-300" id="float-cart-items-preview">Ready to send to kitchen</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="font-serif text-lg font-bold text-white" id="float-cart-total">₹0</span>
+                <div class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-gold">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </div>
+            </div>
+        </button>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL 1: 3D MULTI-ANGLE DISH INSPECTION MODAL             -->
+    <!-- ========================================================= -->
+    <div id="dish-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md transition-opacity">
+        <div class="glass-panel border border-gold/30 rounded-3xl w-full max-w-3xl max-h-[92vh] overflow-y-auto no-scrollbar shadow-2xl relative animate-fadeIn">
+            <!-- Close Button -->
+            <button onclick="closeDishModal()" class="absolute top-4 right-4 z-30 w-9 h-9 rounded-full bg-black/60 hover:bg-gold hover:text-obsidian text-white border border-white/15 flex items-center justify-center transition cursor-pointer">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+
+            <div class="grid grid-cols-1 md:grid-cols-12">
+                <!-- Left/Top: 3D Interactive 4-Angle Table Stage -->
+                <div class="md:col-span-7 bg-[#090b0e] p-4 sm:p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/10">
+                    <!-- Top Badges -->
+                    <div class="flex items-center justify-between mb-3">
+                        <span id="modal-angle-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/15 border border-gold/30 text-[11px] font-medium text-gold-light">
+                            <i data-lucide="rotate-3d" class="w-3.5 h-3.5 text-gold"></i>
+                            <span id="modal-angle-name">Angle 1: 45° Hero Shot</span>
+                        </span>
+                        <span class="text-[11px] text-gray-400">Drag image to tilt 3D table</span>
+                    </div>
+
+                    <!-- 3D Perspective Table Viewer -->
+                    <div 
+                        class="stage-3d studio-table-surface relative aspect-[4/3] w-full rounded-2xl overflow-hidden border border-white/10 shadow-inner select-none" 
+                        id="modal-3d-stage"
+                        onmousedown="startModalDrag(event)"
+                        onmousemove="onModalDrag(event)"
+                        onmouseup="endModalDrag()"
+                        onmouseleave="endModalDrag()"
+                        ontouchstart="startModalTouchDrag(event)"
+                        ontouchmove="onModalTouchDrag(event)"
+                        ontouchend="endModalDrag()"
+                    >
+                        <div id="modal-lamp-glow" class="studio-lamp-glow lamp-angle-0"></div>
+                        <img id="modal-main-img" src="" alt="Dish View" draggable="false" class="angle-viewer-frame cam-angle-0 w-full h-full object-cover">
+                        
+                        <!-- Table Surface Label -->
+                        <div class="absolute bottom-2.5 left-3 z-20 px-2.5 py-0.5 rounded-full bg-black/65 backdrop-blur-md border border-white/10 text-[10px] text-gray-300 pointer-events-none">
+                            Same Plated Dish • Dark Slate Table Rig
+                        </div>
+
+                        <!-- Prev / Next Angle Floating Arrows -->
+                        <button onclick="event.stopPropagation(); cycleModalAngle(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/65 hover:bg-gold hover:text-obsidian text-white border border-white/15 flex items-center justify-center transition cursor-pointer">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); cycleModalAngle(1)" class="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/65 hover:bg-gold hover:text-obsidian text-white border border-white/15 flex items-center justify-center transition cursor-pointer">
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <!-- 4-Angle Thumbnail Selector Strip -->
+                    <div class="grid grid-cols-4 gap-2.5 mt-4" id="modal-thumbnails">
+                        <!-- 4 angle thumbnails injected dynamically -->
+                    </div>
+                </div>
+
+                <!-- Right/Bottom: Culinary Details & Order Controls -->
+                <div class="md:col-span-5 p-5 sm:p-6 flex flex-col justify-between space-y-5">
+                    <div class="space-y-3">
+                        <!-- Veg / Non-Veg + Category -->
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span id="modal-diet-badge"></span>
+                            <span id="modal-category-badge" class="text-[11px] uppercase tracking-wider text-gray-400 bg-white/5 px-2.5 py-0.5 rounded-md border border-white/10"></span>
+                            <span id="modal-special-badge" class="hidden text-[11px] text-gold bg-gold/10 border border-gold/30 px-2 py-0.5 rounded-md font-medium">★ Chef's Special</span>
+                        </div>
+
+                        <!-- Dish Title & Price -->
+                        <div>
+                            <h3 id="modal-title" class="font-serif text-2xl font-bold text-white leading-snug"></h3>
+                            <p id="modal-price" class="font-serif text-xl font-bold text-gold mt-1"></p>
+                        </div>
+
+                        <!-- Prep Time & Calories -->
+                        <div class="flex items-center gap-4 text-xs text-gray-400 py-2 border-y border-white/10">
+                            <span class="flex items-center gap-1.5">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 text-gold"></i>
+                                <span id="modal-prep">18 mins</span>
+                            </span>
+                            <span class="flex items-center gap-1.5">
+                                <i data-lucide="flame" class="w-3.5 h-3.5 text-gold"></i>
+                                <span id="modal-calories">540 kcal</span>
+                            </span>
+                        </div>
+
+                        <!-- Description -->
+                        <p id="modal-desc" class="text-xs sm:text-sm text-gray-300 leading-relaxed"></p>
+                    </div>
+
+                    <!-- Add to Order Section -->
+                    <div class="space-y-3 pt-2">
+                        <div id="modal-unavailable-alert" class="hidden p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs text-center font-medium">
+                            This creation is currently unavailable for ordering.
+                        </div>
+
+                        <div id="modal-order-controls" class="space-y-3">
+                            <div class="flex items-center justify-between bg-obsidian/90 border border-white/10 rounded-xl p-2">
+                                <span class="text-xs text-gray-400 pl-2">Quantity</span>
+                                <div class="flex items-center gap-3">
+                                    <button onclick="updateModalQty(-1)" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold cursor-pointer">-</button>
+                                    <span id="modal-qty" class="text-sm font-bold text-white w-5 text-center">1</span>
+                                    <button onclick="updateModalQty(1)" class="w-8 h-8 rounded-lg bg-gold text-obsidian hover:bg-gold-light flex items-center justify-center font-bold cursor-pointer">+</button>
+                                </div>
+                            </div>
+
+                            <button id="modal-add-btn" onclick="addFromModalToCart()" class="w-full py-3.5 px-4 rounded-xl bg-gold hover:bg-gold-light text-obsidian font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-gold/20 transition cursor-pointer">
+                                <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+                                <span>Add to Table Order</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL 2: SLIDE-OUT ORDER CART DRAWER                      -->
+    <!-- ========================================================= -->
+    <div id="cart-drawer" class="fixed inset-0 z-50 hidden justify-end bg-black/80 backdrop-blur-sm">
+        <div class="w-full max-w-md bg-[#12151c] border-l border-gold/25 h-full flex flex-col justify-between shadow-2xl">
+            <!-- Drawer Header -->
+            <div class="p-5 border-b border-white/10 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-gold/15 border border-gold/30 flex items-center justify-center text-gold">
+                        <i data-lucide="utensils" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-serif text-lg font-bold text-white">Your Table Order</h3>
+                        <p class="text-[11px] text-gray-400">THE ROYAL PLATE • Restaurant & Café</p>
+                    </div>
+                </div>
+                <button onclick="closeCartDrawer()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center text-gray-300 cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Cart Body (Items or Receipt) -->
+            <div class="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar" id="cart-body-container">
+                <!-- Customer Details & Table Number -->
+                <div class="glass-panel rounded-2xl p-4 space-y-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="user" class="w-4 h-4 text-gold"></i>
+                            <span class="text-xs font-medium text-gray-300">Your Name *</span>
+                        </div>
+                        <input 
+                            type="text" 
+                            id="customer-name-input" 
+                            required 
+                            placeholder="e.g., Aarav Sharma" 
+                            class="w-44 bg-obsidian border border-white/15 focus:border-gold rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none"
+                        >
+                    </div>
+
+                    <div class="flex items-center justify-between gap-3 pt-2 border-t border-white/10">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="map-pin" class="w-4 h-4 text-gold"></i>
+                            <span class="text-xs font-medium text-gray-300">Dining Table Number</span>
+                        </div>
+                        <select id="table-number-select" onchange="updateTableNumber(this.value)" class="bg-obsidian border border-gold/40 text-gold font-bold text-xs rounded-xl px-3 py-1.5 focus:outline-none">
+                            <option value="01">Table 01</option>
+                            <option value="02">Table 02</option>
+                            <option value="03">Table 03</option>
+                            <option value="04">Table 04</option>
+                            <option value="05">Table 05</option>
+                            <option value="06">Table 06</option>
+                            <option value="07" selected>Table 07</option>
+                            <option value="08">Table 08 (VIP)</option>
+                            <option value="09">Lounge Patio 1</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Cart Items List -->
+                <div id="cart-items-list" class="space-y-3">
+                    <!-- Dynamic items -->
+                </div>
+
+                <!-- Kitchen Special Instructions / Notice -->
+                <div id="kitchen-notes-box" class="space-y-1.5 pt-2">
+                    <label class="text-xs font-medium text-gray-400 flex items-center gap-1.5">
+                        <i data-lucide="message-square" class="w-3.5 h-3.5 text-gold"></i>
+                        <span>Special Requests / Notes for Kitchen before ordering *</span>
+                    </label>
+                    <textarea id="kitchen-notes-input" rows="2" placeholder="e.g., Extra spicy, less oil, allergies, or special instructions..." class="w-full bg-obsidian border border-white/10 focus:border-gold/50 rounded-xl p-3 text-xs text-white placeholder-gray-600 focus:outline-none"></textarea>
+                </div>
+            </div>
+
+            <!-- Drawer Footer (Totals & Place Order) -->
+            <div id="cart-footer" class="p-5 border-t border-white/10 bg-obsidian/90 space-y-3">
+                <div class="space-y-1.5 text-xs">
+                    <div class="flex justify-between text-gray-400">
+                        <span>Item Subtotal</span>
+                        <span id="cart-subtotal">₹0</span>
+                    </div>
+                    <div class="flex justify-between text-gray-400">
+                        <span>GST (5%)</span>
+                        <span id="cart-tax">₹0</span>
+                    </div>
+                    <div class="flex justify-between text-base font-bold text-white pt-2 border-t border-white/10">
+                        <span class="font-serif">Total Payable</span>
+                        <span id="cart-total" class="font-serif text-gold">₹0</span>
+                    </div>
+                </div>
+
+                <button id="place-order-btn" onclick="placeTableOrder()" class="w-full py-3.5 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-40 disabled:cursor-not-allowed text-obsidian font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-gold/20 transition cursor-pointer">
+                    <i data-lucide="message-circle" class="w-4 h-4 text-obsidian"></i>
+                    <span>Send Order via WhatsApp & Pay</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL 3: ORDER CONFIRMATION & PAYMENT RECEIPT SCREEN      -->
+    <!-- ========================================================= -->
+    <div id="order-success-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+        <div class="glass-gold rounded-3xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl border border-gold/50 max-h-[92vh] overflow-y-auto no-scrollbar">
+            <div class="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 flex items-center justify-center mx-auto">
+                <i data-lucide="check" class="w-7 h-7"></i>
+            </div>
+            <div>
+                <span class="text-[11px] uppercase tracking-widest text-gold font-semibold">Order Placed Successfully</span>
+                <h3 class="font-serif text-xl font-bold text-white mt-0.5">Royal Feast Underway</h3>
+                <p class="text-xs text-gray-300 mt-1">Order <strong id="receipt-order-id" class="text-gold">#TRP-842</strong> for <strong id="receipt-table" class="text-white">Table 07</strong>.</p>
+            </div>
+
+            <!-- WhatsApp Send Status Box -->
+            <div class="bg-obsidian/90 rounded-2xl p-3.5 text-left border border-emerald-500/30 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                        <i data-lucide="message-circle" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-white">Sent to WhatsApp Kitchen</p>
+                        <p class="text-[10px] text-gray-400">+91 98836-56401</p>
+                    </div>
+                </div>
+                <a id="whatsapp-direct-link" href="#" target="_blank" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1 transition shadow-md">
+                    <span>Open WA</span>
+                    <i data-lucide="external-link" class="w-3 h-3"></i>
+                </a>
+            </div>
+
+            <!-- Online Payment QR Code Box -->
+            <div class="bg-obsidian/95 rounded-2xl p-4 border border-gold/40 space-y-2 text-center">
+                <div class="flex items-center justify-center gap-1.5 text-xs font-bold text-gold">
+                    <i data-lucide="qr-code" class="w-4 h-4"></i>
+                    <span>Scan to Pay Online (UPI / Card / Wallets)</span>
+                </div>
+                <div class="w-36 h-36 mx-auto bg-white p-2 rounded-xl border border-gold/30 shadow-inner flex items-center justify-center">
+                    <!-- Base64 representation of the uploaded Payment QR code -->
+                    <img id="payment-qr-img" src="" alt="Online Payment QR" class="w-full h-full object-contain">
+                </div>
+                <p class="text-[10px] text-gray-400">Scan using GPay, PhonePe, Paytm, or any UPI app to settle the bill.</p>
+            </div>
+
+            <div class="bg-obsidian/85 rounded-2xl p-3 text-left border border-white/10 space-y-1.5 max-h-36 overflow-y-auto no-scrollbar" id="receipt-summary-list">
+                <!-- Receipt items -->
+            </div>
+
+            <div class="flex items-center justify-between text-sm font-bold px-2">
+                <span class="text-gray-300">Total Billed (Incl. GST)</span>
+                <span id="receipt-total" class="font-serif text-lg text-gold">₹0</span>
+            </div>
+
+            <button onclick="closeOrderSuccessModal()" class="w-full py-3 rounded-xl bg-gold hover:bg-gold-light text-obsidian font-bold text-xs uppercase tracking-wider transition cursor-pointer">
+                Back to 3D Menu
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL 4: OWNER SECRET PASSWORD LOGIN MODAL                -->
+    <!-- ========================================================= -->
+    <div id="login-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+        <div class="glass-panel border border-gold/40 rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl relative">
+            <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+
+            <div class="text-center space-y-2">
+                <div class="w-12 h-12 rounded-2xl bg-gold/15 border border-gold/40 text-gold flex items-center justify-center mx-auto">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
+                <h3 class="font-serif text-xl font-bold text-white">Owner Portal Access</h3>
+                <p class="text-xs text-gray-400">Enter your secret management passcode to add dishes or toggle live availability.</p>
+            </div>
+
+            <form onsubmit="handleOwnerLogin(event)" class="space-y-4">
+                <div>
+                    <input 
+                        type="password" 
+                        id="owner-password-input" 
+                        placeholder="Enter secret passcode..." 
+                        required
+                        class="w-full bg-obsidian border border-white/15 focus:border-gold rounded-xl px-4 py-3 text-sm text-white text-center tracking-widest placeholder-gray-600 focus:outline-none"
+                    >
+                    <p id="login-error-msg" class="hidden text-xs text-red-400 text-center mt-2">Incorrect passcode. Please try again.</p>
+                </div>
+
+                <button type="submit" class="w-full py-3 rounded-xl bg-gold hover:bg-gold-light text-obsidian font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-gold/15 cursor-pointer">
+                    Unlock Owner Controls
+                </button>
+            </form>
+
+            <div class="text-center pt-1 border-t border-white/5">
+                <span class="text-[11px] text-gray-500">Demo passcode: <code class="text-gold/80 font-mono">admin123</code></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL 5: OWNER ADD NEW DISH MODAL (4-ANGLE UPLOAD/URL)    -->
+    <!-- ========================================================= -->
+    <div id="add-dish-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md">
+        <div class="glass-panel border border-gold/40 rounded-3xl max-w-2xl w-full max-h-[92vh] overflow-y-auto no-scrollbar p-5 sm:p-7 shadow-2xl relative">
+            <div class="flex items-center justify-between pb-4 border-b border-white/10">
+                <div>
+                    <span class="text-[10px] uppercase tracking-widest text-gold font-bold">Owner Studio</span>
+                    <h3 class="font-serif text-xl sm:text-2xl font-bold text-white">Add New 3D Menu Dish</h3>
+                </div>
+                <button onclick="closeAddDishModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleAddNewDish(event)" class="space-y-4 mt-5">
+                <!-- Row 1: Name & Price -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Dish Name *</label>
+                        <input type="text" id="new-dish-name" required placeholder="e.g., Dal Makhani Royale" class="w-full bg-obsidian border border-white/15 focus:border-gold rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Price (₹ INR) *</label>
+                        <input type="number" id="new-dish-price" step="1" min="1" required placeholder="299" class="w-full bg-obsidian border border-white/15 focus:border-gold rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Row 2: Category, Dietary Type, Chef Special -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Category *</label>
+                        <select id="new-dish-category" class="w-full bg-obsidian border border-white/15 focus:border-gold rounded-xl px-3 py-2.5 text-xs sm:text-sm text-white focus:outline-none">
+                            <option value="Starters">Starters</option>
+                            <option value="Main Course" selected>Main Course</option>
+                            <option value="Pizza & Pasta">Pizza & Pasta</option>
+                            <option value="Desserts">Desserts</option>
+                            <option value="Beverages">Beverages</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Dietary Classification *</label>
+                        <select id="new-dish-diet" class="w-full bg-obsidian border border-white/15 focus:border-gold rounded-xl px-3 py-2.5 text-xs sm:text-sm text-white focus:outline-none">
+                            <option value="veg">Pure Veg (Green)</option>
+                            <option value="non-veg">Non-Veg (Red)</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col justify-end">
+                        <label class="flex items-center gap-2.5 bg-obsidian border border-white/15 rounded-xl px-3.5 py-2.5 cursor-pointer hover:border-gold/50 transition">
+                            <input type="checkbox" id="new-dish-special" class="accent-gold w-4 h-4">
+                            <span class="text-xs font-medium text-gold-light">★ Chef's Special</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Row 3: Prep Time & Calories -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Prep Time</label>
+                        <input type="text" id="new-dish-prep" placeholder="20 mins" value="18 mins" class="w-full bg-obsidian border border-white/15 focus:border-gold rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Calories</label>
+                        <input type="text" id="new-dish-cal" placeholder="580 kcal" value="520 kcal" class="w-full bg-obsidian border border-white/15 focus:border-gold rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Row 4: Description -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-300 mb-1">Culinary Description *</label>
+                    <textarea id="new-dish-desc" rows="2" required placeholder="Describe key ingredients, plating artistry, and tasting notes..." class="w-full bg-obsidian border border-white/15 focus:border-gold rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"></textarea>
+                </div>
+
+                <!-- Row 5: 4-Angle Photo Inputs (File Upload OR Image URL + Live Preview) -->
+                <div class="space-y-2.5 pt-2 border-t border-white/10">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-semibold text-gold flex items-center gap-1.5">
+                            <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                            <span>4-Angle Dish Photography (Upload File or Paste URL)</span>
+                        </label>
+                        <span class="text-[10px] text-gray-400">Blank angles auto-fill from Angle 1</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Angle 1 -->
+                        <div class="bg-obsidian/90 border border-white/10 rounded-2xl p-3 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-semibold text-gold-light">Angle 1: 45° Hero Shot *</span>
+                                <label class="text-[10px] bg-white/10 hover:bg-gold hover:text-obsidian text-gray-200 px-2 py-0.5 rounded cursor-pointer transition">
+                                    Upload Photo
+                                    <input type="file" accept="image/*" onchange="handleAngleFileUpload(event, 1)" class="hidden">
+                                </label>
+                            </div>
+                            <div class="flex items-center gap-2.5">
+                                <img id="preview-angle-1" src="https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=300&q=80" class="w-12 h-12 rounded-lg object-cover border border-white/15 shrink-0">
+                                <input type="text" id="url-angle-1" required placeholder="Paste image URL or upload..." value="https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=900&q=80" oninput="updateAnglePreview(1, this.value)" class="w-full bg-charcoal border border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-white focus:outline-none focus:border-gold">
+                            </div>
+                        </div>
+
+                        <!-- Angle 2 -->
+                        <div class="bg-obsidian/90 border border-white/10 rounded-2xl p-3 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-semibold text-gray-300">Angle 2: Top-Down Flat Lay</span>
+                                <label class="text-[10px] bg-white/10 hover:bg-gold hover:text-obsidian text-gray-200 px-2 py-0.5 rounded cursor-pointer transition">
+                                    Upload Photo
+                                    <input type="file" accept="image/*" onchange="handleAngleFileUpload(event, 2)" class="hidden">
+                                </label>
+                            </div>
+                            <div class="flex items-center gap-2.5">
+                                <img id="preview-angle-2" src="https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=300&q=80" class="w-12 h-12 rounded-lg object-cover border border-white/15 shrink-0">
+                                <input type="text" id="url-angle-2" placeholder="Leave blank to use Angle 1 camera rig..." oninput="updateAnglePreview(2, this.value)" class="w-full bg-charcoal border border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-white focus:outline-none focus:border-gold">
+                            </div>
+                        </div>
+
+                        <!-- Angle 3 -->
+                        <div class="bg-obsidian/90 border border-white/10 rounded-2xl p-3 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-semibold text-gray-300">Angle 3: Macro Texture Detail</span>
+                                <label class="text-[10px] bg-white/10 hover:bg-gold hover:text-obsidian text-gray-200 px-2 py-0.5 rounded cursor-pointer transition">
+                                    Upload Photo
+                                    <input type="file" accept="image/*" onchange="handleAngleFileUpload(event, 3)" class="hidden">
+                                </label>
+                            </div>
+                            <div class="flex items-center gap-2.5">
+                                <img id="preview-angle-3" src="https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=300&q=80" class="w-12 h-12 rounded-lg object-cover border border-white/15 shrink-0">
+                                <input type="text" id="url-angle-3" placeholder="Leave blank to use Angle 1 camera rig..." oninput="updateAnglePreview(3, this.value)" class="w-full bg-charcoal border border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-white focus:outline-none focus:border-gold">
+                            </div>
+                        </div>
+
+                        <!-- Angle 4 -->
+                        <div class="bg-obsidian/90 border border-white/10 rounded-2xl p-3 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-semibold text-gray-300">Angle 4: Side Plating View</span>
+                                <label class="text-[10px] bg-white/10 hover:bg-gold hover:text-obsidian text-gray-200 px-2 py-0.5 rounded cursor-pointer transition">
+                                    Upload Photo
+                                    <input type="file" accept="image/*" onchange="handleAngleFileUpload(event, 4)" class="hidden">
+                                </label>
+                            </div>
+                            <div class="flex items-center gap-2.5">
+                                <img id="preview-angle-4" src="https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=300&q=80" class="w-12 h-12 rounded-lg object-cover border border-white/15 shrink-0">
+                                <input type="text" id="url-angle-4" placeholder="Leave blank to use Angle 1 camera rig..." oninput="updateAnglePreview(4, this.value)" class="w-full bg-charcoal border border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-white focus:outline-none focus:border-gold">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                    <button type="button" onclick="closeAddDishModal()" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-gray-300 font-medium cursor-pointer">Cancel</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-obsidian font-bold text-xs uppercase tracking-wider shadow-lg shadow-gold/20 transition cursor-pointer">
+                        Publish to 3D Menu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- CUSTOM CONFIRMATION & TOAST NOTIFICATION                  -->
+    <!-- ========================================================= -->
+    <div id="confirm-dialog" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass-panel border border-gold/40 rounded-2xl max-w-sm w-full p-5 text-center space-y-4 shadow-2xl">
+            <h4 id="confirm-title" class="font-serif text-lg font-bold text-white">Confirm Action</h4>
+            <p id="confirm-message" class="text-xs text-gray-300">Are you sure you want to proceed?</p>
+            <div class="flex items-center justify-center gap-3 pt-2">
+                <button onclick="closeConfirmDialog()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs text-gray-200 cursor-pointer">Cancel</button>
+                <button id="confirm-yes-btn" class="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-semibold cursor-pointer">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 right-5 z-50 pointer-events-none transition-all duration-300 opacity-0 -translate-y-4">
+        <div class="glass-gold px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2.5 border border-gold/50">
+            <i data-lucide="sparkles" class="w-4 h-4 text-gold"></i>
+            <span id="toast-msg" class="text-xs font-medium text-white">Action completed</span>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- JAVASCRIPT APPLICATION LOGIC                              -->
+    <!-- ========================================================= -->
+    <script>
+        // ---------------------------------------------------------
+        // 1. EXACT 18 DISHES FROM "THE ROYAL PLATE" MENU (ALL IN INR ₹)
+        //    Each dish uses a consistent plated dish on a dark table
+        //    with our 4-Angle Studio Camera Rig (or 4 custom photos).
+        // ---------------------------------------------------------
+        const ANGLE_LABELS = [
+            "45° Hero Shot",
+            "Top-Down Flat Lay",
+            "Macro Texture Detail",
+            "Side Plating View"
+        ];
+
+        function makeConsistentTableAngles(baseUrl) {
+            return [baseUrl, baseUrl, baseUrl, baseUrl];
+        }
+
+        const DEFAULT_DISHES = [
+            // ================= STARTERS =================
+            {
+                id: "trp-1",
+                name: "Paneer Tikka",
+                category: "Starters",
+                diet: "veg",
+                price: 249,
+                prepTime: "15 mins",
+                calories: "380 kcal",
+                isSpecial: true,
+                available: true,
+                description: "Marinated cottage cheese grilled with Indian spices, charred bell peppers, and onions, served on a dark slate platter with mint chutney.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=900&q=80")
+            },
+            {
+                id: "trp-2",
+                name: "Crispy Corn",
+                category: "Starters",
+                diet: "veg",
+                price: 189,
+                prepTime: "12 mins",
+                calories: "310 kcal",
+                isSpecial: false,
+                available: true,
+                description: "Golden crispy corn tossed with herbs and spices, spring onions, crushed black pepper, and zesty lime.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=900&q=80")
+            },
+            {
+                id: "trp-3",
+                name: "Chicken Lollipop",
+                category: "Starters",
+                diet: "non-veg",
+                price: 299,
+                prepTime: "18 mins",
+                calories: "460 kcal",
+                isSpecial: true,
+                available: true,
+                description: "Spicy Indo-Chinese chicken wings frenched to perfection, wok-tossed in fiery Schezwan garlic glaze.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1608039755401-742074f0548d?auto=format&fit=crop&w=900&q=80")
+            },
+
+            // ================= MAIN COURSE =================
+            {
+                id: "trp-4",
+                name: "Butter Chicken",
+                category: "Main Course",
+                diet: "non-veg",
+                price: 399,
+                prepTime: "22 mins",
+                calories: "640 kcal",
+                isSpecial: true,
+                available: true,
+                description: "Creamy tomato gravy with tender tandoori chicken tikka, finished with velvety white butter, kasuri methi, and fresh cream.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=900&q=80")
+            },
+            {
+                id: "trp-5",
+                name: "Paneer Butter Masala",
+                category: "Main Course",
+                diet: "veg",
+                price: 329,
+                prepTime: "20 mins",
+                calories: "580 kcal",
+                isSpecial: false,
+                available: true,
+                description: "Soft paneer in rich buttery gravy simmered with ripe tomatoes, cashews, aromatic garam masala, and cream swirl.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=900&q=80")
+            },
+            {
+                id: "trp-6",
+                name: "Veg Hakka Noodles",
+                category: "Main Course",
+                diet: "veg",
+                price: 229,
+                prepTime: "15 mins",
+                calories: "440 kcal",
+                isSpecial: false,
+                available: true,
+                description: "Stir-fried noodles with fresh vegetables, julienned carrots, bell peppers, cabbage, and smoky soy-garlic seasoning.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=900&q=80")
+            },
+            {
+                id: "trp-7",
+                name: "Chicken Biryani",
+                category: "Main Course",
+                diet: "non-veg",
+                price: 349,
+                prepTime: "25 mins",
+                calories: "690 kcal",
+                isSpecial: true,
+                available: true,
+                description: "Aromatic basmati rice with flavourful chicken, slow-cooked on dum with saffron, caramelized onions, mint, and royal spices.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=900&q=80")
+            },
+
+            // ================= PIZZA & PASTA =================
+            {
+                id: "trp-8",
+                name: "Margherita Pizza",
+                category: "Pizza & Pasta",
+                diet: "veg",
+                price: 299,
+                prepTime: "16 mins",
+                calories: "540 kcal",
+                isSpecial: false,
+                available: true,
+                description: "Classic cheese pizza with fresh basil, San Marzano tomato sauce, and melted mozzarella on a stone-baked crust.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=900&q=80")
+            },
+            {
+                id: "trp-9",
+                name: "Farmhouse Pizza",
+                category: "Pizza & Pasta",
+                diet: "veg",
+                price: 399,
+                prepTime: "18 mins",
+                calories: "650 kcal",
+                isSpecial: false,
+                available: true,
+                description: "Loaded with vegetables including crisp bell peppers, button mushrooms, sweet corn, red onions, olives, and extra mozzarella.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80")
+            },
+            {
+                id: "trp-10",
+                name: "White Sauce Pasta",
+                category: "Pizza & Pasta",
+                diet: "veg",
+                price: 329,
+                prepTime: "16 mins",
+                calories: "590 kcal",
+                isSpecial: false,
+                available: true,
+                description: "Creamy pasta in white sauce infused with roasted garlic, Italian herbs, parmesan cheese, and sautéed broccoli.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1645112411341-6c4fd023714a?auto=format&fit=crop&w=900&q=80")
+            },
+            {
+                id: "trp-11",
+                name: "Arrabbiata Pasta",
+                category: "Pizza & Pasta",
+                diet: "veg",
+                price: 319,
+                prepTime: "16 mins",
+                calories: "510 kcal",
+                isSpecial: false,
+                available: true,
+                description: "Spicy tomato pasta tossed in a fiery red chili, garlic, olive oil, and crushed plum tomato sauce with fresh basil.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=900&q=80")
+            },
+
+            // ================= DESSERTS =================
+            {
+                id: "trp-12",
+                name: "Chocolate Brownie",
+                category: "Desserts",
+                diet: "veg",
+                price: 179,
+                prepTime: "10 mins",
+                calories: "480 kcal",
+                isSpecial: true,
+                available: true,
+                description: "Rich chocolate brownie with ice cream, served warm on a dark plate with melted dark chocolate drizzle.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1564355808539-22fda35bed7e?auto=format&fit=crop&w=900&q=80")
+            },
+            {
+                id: "trp-13",
+                name: "New York Cheesecake",
+                category: "Desserts",
+                diet: "veg",
+                price: 249,
+                prepTime: "8 mins",
+                calories: "450 kcal",
+                isSpecial: false,
+                available: true,
+                description: "Creamy cheesecake with berry topping over a buttery biscuit crust, finished with fresh strawberries and raspberry coulis.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=900&q=80")
+            },
+            {
+                id: "trp-14",
+                name: "Gulab Jamun (2 pcs)",
+                category: "Desserts",
+                diet: "veg",
+                price: 99,
+                prepTime: "8 mins",
+                calories: "320 kcal",
+                isSpecial: false,
+                available: true,
+                description: "Soft and delicious traditional dessert made of khoya dumplings soaked in warm cardamom and saffron rose syrup.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1666190092159-3171cf0fbb12?auto=format&fit=crop&w=900&q=80")
+            },
+
+            // ================= BEVERAGES =================
+            {
+                id: "trp-15",
+                name: "Fresh Lime Soda",
+                category: "Beverages",
+                diet: "veg",
+                price: 99,
+                prepTime: "5 mins",
+                calories: "95 kcal",
+                isSpecial: false,
+                available: true,
+                description: "Cool and refreshing sparkling lime drink crafted with freshly squeezed key limes, mint leaves, and chilled club soda.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=900&q=80")
+            },
+            {
+                id: "trp-16",
+                name: "Cold Coffee",
+                category: "Beverages",
+                diet: "veg",
+                price: 159,
+                prepTime: "6 mins",
+                calories: "240 kcal",
+                isSpecial: false,
+                available: true,
+                description: "Chilled coffee with a hint of chocolate, blended with roasted espresso shots, creamy milk, and cocoa dusting.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=900&q=80")
+            },
+            {
+                id: "trp-17",
+                name: "Oreo Milkshake",
+                category: "Beverages",
+                diet: "veg",
+                price: 189,
+                prepTime: "7 mins",
+                calories: "390 kcal",
+                isSpecial: false,
+                available: true,
+                description: "Creamy milkshake with Oreo cookies crushed into vanilla bean ice cream, topped with whipped cream and cookie crumble.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=900&q=80")
+            },
+            {
+                id: "trp-18",
+                name: "Masala Chai",
+                category: "Beverages",
+                diet: "veg",
+                price: 69,
+                prepTime: "7 mins",
+                calories: "120 kcal",
+                isSpecial: false,
+                available: true,
+                description: "Traditional spiced tea brewed with Assam tea leaves, crushed ginger, green cardamom, cloves, and rich milk.",
+                images: makeConsistentTableAngles("https://images.unsplash.com/photo-1561336313-0bd5e0b27ec8?auto=format&fit=crop&w=900&q=80")
+            }
+        ];
+
+        // ---------------------------------------------------------
+        // 2. APPLICATION STATE & LOCAL STORAGE PERSISTENCE
+        // ---------------------------------------------------------
+        const STORAGE_KEY_DISHES = "royal_plate_menu_dishes_v2";
+        const STORAGE_KEY_OWNER = "royal_plate_owner_auth";
+        const OWNER_SECRET_PASS = "admin123";
+
+        let dishes = [];
+        let cart = [];
+        let isOwnerMode = false;
+
+        // Active Filters
+        let activeCategory = "All";
+        let activeDiet = "all";
+        let searchQuery = "";
+
+        // Track active image angle index (0-3) per dish card
+        let cardAngleState = {};
+
+        // 3D Inspection Modal State
+        let currentModalDishId = null;
+        let currentModalAngle = 0;
+        let currentModalQty = 1;
+
+        // Initialize App on Load
+        document.addEventListener("DOMContentLoaded", () => {
+            loadDishesFromStorage();
+            checkOwnerAuthState();
+            renderMenu();
+            updateCartUI();
+            lucide.createIcons();
+        });
+
+        function loadDishesFromStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY_DISHES);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        dishes = parsed;
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.warn("Could not read menu from localStorage:", err);
+            }
+            dishes = JSON.parse(JSON.stringify(DEFAULT_DISHES));
+            saveDishesToStorage();
+        }
+
+        function saveDishesToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY_DISHES, JSON.stringify(dishes));
+            } catch (err) {
+                showToast("Storage full! Try using smaller image files or URLs.");
+            }
+        }
+
+        function checkOwnerAuthState() {
+            isOwnerMode = sessionStorage.getItem(STORAGE_KEY_OWNER) === "true";
+            syncOwnerUI();
+        }
+
+        function syncOwnerUI() {
+            const banner = document.getElementById("owner-banner");
+            const loginBtn = document.getElementById("owner-login-btn");
+            if (isOwnerMode) {
+                banner.classList.remove("hidden");
+                loginBtn.innerHTML = `<i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i><span class="font-semibold text-emerald-300">Owner Active</span>`;
+            } else {
+                banner.classList.add("hidden");
+                loginBtn.innerHTML = `<i data-lucide="lock" class="w-3.5 h-3.5 text-gold/70 group-hover:text-gold transition"></i><span class="font-medium tracking-wide">Owner Login</span>`;
+            }
+            lucide.createIcons();
+        }
+
+        // ---------------------------------------------------------
+        // 3. FILTERING & SEARCH LOGIC
+        // ---------------------------------------------------------
+        function setCategoryFilter(category) {
+            activeCategory = category;
+            document.getElementById("current-category-heading").textContent = category === "All" ? "All Courses" : category;
+            
+            document.querySelectorAll(".cat-tab").forEach(btn => {
+                if (btn.dataset.cat === category) {
+                    btn.className = "cat-tab px-4 py-1.5 rounded-xl text-xs font-semibold transition whitespace-nowrap cursor-pointer bg-white/12 text-gold border border-gold/30";
+                } else {
+                    btn.className = "cat-tab px-4 py-1.5 rounded-xl text-xs font-medium text-gray-400 hover:text-white hover:bg-white/5 border border-transparent transition whitespace-nowrap cursor-pointer";
+                }
+            });
+            renderMenu();
+        }
+
+        function setDietaryFilter(diet) {
+            activeDiet = diet;
+            document.querySelectorAll(".diet-pill").forEach(btn => {
+                if (btn.dataset.diet === diet) {
+                    btn.classList.remove("bg-white/5", "text-gray-300", "border-white/10");
+                    btn.classList.add("bg-gold", "text-obsidian", "border-gold", "font-semibold");
+                } else {
+                    btn.classList.remove("bg-gold", "text-obsidian", "border-gold", "font-semibold");
+                    btn.classList.add("bg-white/5", "text-gray-300", "border-white/10");
+                }
+            });
+            renderMenu();
+        }
+
+        function handleSearch(val) {
+            searchQuery = val.trim().toLowerCase();
+            const clearBtn = document.getElementById("clear-search-btn");
+            if (searchQuery.length > 0) {
+                clearBtn.classList.remove("hidden");
+            } else {
+                clearBtn.classList.add("hidden");
+            }
+            renderMenu();
+        }
+
+        function clearSearch() {
+            document.getElementById("search-input").value = "";
+            handleSearch("");
+        }
+
+        function resetAllFilters() {
+            clearSearch();
+            setCategoryFilter("All");
+            setDietaryFilter("all");
+        }
+
+        // ---------------------------------------------------------
+        // 4. RENDER 3D INTERACTIVE DISH CARDS
+        // ---------------------------------------------------------
+        function renderMenu() {
+            const grid = document.getElementById("menu-grid");
+            const emptyState = document.getElementById("empty-state");
+            const countLabel = document.getElementById("dish-count-label");
+
+            const filtered = dishes.filter(dish => {
+                const matchCategory = activeCategory === "All" || dish.category === activeCategory;
+                const matchDiet = 
+                    activeDiet === "all" ? true :
+                    activeDiet === "veg" ? dish.diet === "veg" :
+                    activeDiet === "non-veg" ? dish.diet === "non-veg" :
+                    activeDiet === "special" ? dish.isSpecial === true : true;
+                
+                const matchSearch = !searchQuery || 
+                    dish.name.toLowerCase().includes(searchQuery) || 
+                    dish.description.toLowerCase().includes(searchQuery) ||
+                    dish.category.toLowerCase().includes(searchQuery);
+
+                return matchCategory && matchDiet && matchSearch;
+            });
+
+            countLabel.textContent = `Showing ${filtered.length} ${filtered.length === 1 ? 'creation' : 'creations'}`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = "";
+                emptyState.classList.remove("hidden");
+                lucide.createIcons();
+                return;
+            }
+
+            emptyState.classList.add("hidden");
+            grid.innerHTML = filtered.map(dish => {
+                const activeAngleIdx = cardAngleState[dish.id] || 0;
+                const currentImg = dish.images[activeAngleIdx] || dish.images[0];
+                const isVeg = dish.diet === "veg";
+                const inCartItem = cart.find(c => c.dishId === dish.id);
+
+                return `
+                <div class="card-3d-wrapper">
+                    <article 
+                        id="card-${dish.id}"
+                        class="card-3d glass-panel rounded-3xl overflow-hidden flex flex-col justify-between relative group ${!dish.available ? 'opacity-75' : ''}"
+                        onmousemove="handleCardTilt(event, this)"
+                        onmouseleave="resetCardTilt(this)"
+                        ontouchmove="handleCardTouchTilt(event, this)"
+                        ontouchend="resetCardTilt(this)"
+                    >
+                        <div class="card-glare"></div>
+                        <!-- Top Visual Showcase Area (Same Dark Table, 4 Camera Angles) -->
+                        <div class="studio-table-surface relative aspect-[4/3] w-full overflow-hidden cursor-pointer" onclick="openDishModal('${dish.id}')">
+                            <!-- Directional Table Lamp Glow -->
+                            <div id="lamp-${dish.id}" class="studio-lamp-glow lamp-angle-${activeAngleIdx}"></div>
+
+                            <!-- Consistent Plated Dish with 4-Angle Camera Transform -->
+                            <img 
+                                id="img-${dish.id}"
+                                src="${currentImg}" 
+                                alt="${dish.name}"
+                                onerror="this.src='https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=800&q=80'"
+                                class="cam-angle-${activeAngleIdx} w-full h-full object-cover transition-all duration-500 ${!dish.available ? 'grayscale contrast-75' : ''}"
+                            >
+
+                            <!-- Gradient Vignette -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-[#12151c] via-transparent to-black/45 pointer-events-none z-10"></div>
+
+                            <!-- Top-Left: Veg / Non-Veg Indicator & Chef's Special -->
+                            <div class="absolute top-3.5 left-3.5 flex items-center gap-2 z-10 float-z-sm">
+                                <span class="px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/15 flex items-center gap-1.5 text-[11px] font-semibold ${isVeg ? 'text-emerald-400' : 'text-rose-400'}">
+                                    <span class="w-3 h-3 rounded-sm border ${isVeg ? 'border-emerald-400' : 'border-rose-400'} flex items-center justify-center">
+                                        <span class="w-1.5 h-1.5 rounded-full ${isVeg ? 'bg-emerald-400' : 'bg-rose-400'}"></span>
+                                    </span>
+                                    ${isVeg ? 'VEG' : 'NON-VEG'}
+                                </span>
+
+                                ${dish.isSpecial ? `
+                                <span class="px-2.5 py-1 rounded-full bg-gold/95 text-obsidian font-bold text-[10px] uppercase tracking-wider shadow-md flex items-center gap-1">
+                                    <i data-lucide="award" class="w-3 h-3"></i> Special
+                                </span>` : ''}
+                            </div>
+
+                            <!-- Top-Right: 3D Inspect Trigger Hint -->
+                            <button 
+                                onclick="event.stopPropagation(); openDishModal('${dish.id}')" 
+                                class="absolute top-3.5 right-3.5 z-10 w-8 h-8 rounded-full bg-black/65 hover:bg-gold hover:text-obsidian text-white border border-white/15 flex items-center justify-center transition shadow-md cursor-pointer"
+                                title="Open 3D Multi-Angle View"
+                            >
+                                <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                            </button>
+
+                            <!-- Unavailable Ribbon Overlay -->
+                            ${!dish.available ? `
+                            <div class="absolute inset-0 bg-black/55 backdrop-blur-[2px] flex items-center justify-center z-20">
+                                <div class="px-4 py-1.5 rounded-full bg-red-950/90 border border-red-500/60 text-red-200 text-xs font-bold uppercase tracking-widest shadow-xl transform -rotate-3">
+                                    Currently Unavailable
+                                </div>
+                            </div>` : ''}
+
+                            <!-- Bottom Overlay: Interactive 4-Angle Switcher Pills -->
+                            <div class="absolute bottom-3 left-3.5 right-3.5 flex items-center justify-between z-10" onclick="event.stopPropagation()">
+                                <span class="text-[10px] font-medium text-gray-200 bg-black/65 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10" id="angle-label-${dish.id}">
+                                    ${ANGLE_LABELS[activeAngleIdx]}
+                                </span>
+
+                                <div class="flex items-center gap-1.5 bg-black/70 backdrop-blur-md px-2 py-1 rounded-full border border-white/15">
+                                    ${[0, 1, 2, 3].map(idx => `
+                                        <button 
+                                            onclick="switchCardAngle('${dish.id}', ${idx})"
+                                            class="h-2 rounded-full transition-all duration-300 cursor-pointer ${idx === activeAngleIdx ? 'w-5 bg-gold' : 'w-2 bg-white/40 hover:bg-white/80'}"
+                                            title="View Angle ${idx + 1}: ${ANGLE_LABELS[idx]}"
+                                        ></button>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Content Body -->
+                        <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                            <div class="space-y-2 cursor-pointer" onclick="openDishModal('${dish.id}')">
+                                <div class="flex items-start justify-between gap-2">
+                                    <h3 class="font-serif text-lg sm:text-xl font-bold text-white group-hover:text-gold-light transition leading-snug">
+                                        ${dish.name}
+                                    </h3>
+                                    <span class="font-serif text-lg font-bold text-gold shrink-0">
+                                        ₹${Number(dish.price).toFixed(0)}
+                                    </span>
+                                </div>
+
+                                <p class="text-xs text-gray-400 line-clamp-2 leading-relaxed">
+                                    ${dish.description}
+                                </p>
+                            </div>
+
+                            <!-- Metadata + Customer Order Action -->
+                            <div class="pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-3 text-[11px] text-gray-400">
+                                    <span class="flex items-center gap-1">
+                                        <i data-lucide="clock" class="w-3 h-3 text-gold/80"></i>
+                                        ${dish.prepTime || '15m'}
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <i data-lucide="flame" class="w-3 h-3 text-gold/80"></i>
+                                        ${dish.calories || '480 kcal'}
+                                    </span>
+                                </div>
+
+                                <!-- Add to Order / Quantity Stepper -->
+                                ${!dish.available ? `
+                                    <button disabled class="px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-500 text-xs font-semibold cursor-not-allowed">
+                                        Sold Out
+                                    </button>
+                                ` : inCartItem ? `
+                                    <div class="flex items-center gap-2 bg-gold/15 border border-gold/50 rounded-xl px-2 py-1">
+                                        <button onclick="updateCartItemQty('${dish.id}', -1)" class="w-6 h-6 rounded-lg bg-obsidian text-gold hover:bg-gold hover:text-obsidian flex items-center justify-center font-bold text-xs transition cursor-pointer">-</button>
+                                        <span class="text-xs font-bold text-white w-4 text-center">${inCartItem.qty}</span>
+                                        <button onclick="updateCartItemQty('${dish.id}', 1)" class="w-6 h-6 rounded-lg bg-gold text-obsidian hover:bg-gold-light flex items-center justify-center font-bold text-xs transition cursor-pointer">+</button>
+                                    </div>
+                                ` : `
+                                    <button onclick="addToCart('${dish.id}', 1)" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gold hover:bg-gold-light text-obsidian font-bold text-xs shadow-md shadow-gold/15 transition transform active:scale-95 cursor-pointer">
+                                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                        <span>Add</span>
+                                    </button>
+                                `}
+                            </div>
+
+                            <!-- OWNER LIVE CONTROLS BAR (Visible ONLY when Owner Mode is Active) -->
+                            ${isOwnerMode ? `
+                            <div class="mt-2 pt-3 border-t border-gold/30 bg-gold/5 -mx-5 -mb-5 px-5 py-3 flex items-center justify-between gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer select-none">
+                                    <input 
+                                        type="checkbox" 
+                                        ${dish.available ? 'checked' : ''} 
+                                        onchange="toggleDishAvailability('${dish.id}')"
+                                        class="accent-emerald-500 w-4 h-4 cursor-pointer"
+                                    >
+                                    <span class="text-xs font-semibold ${dish.available ? 'text-emerald-400' : 'text-red-400'}">
+                                        ${dish.available ? 'Available' : 'Not Available'}
+                                    </span>
+                                </label>
+
+                                <button 
+                                    onclick="confirmDeleteDish('${dish.id}', '${dish.name.replace(/'/g, "\\'")}')" 
+                                    class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-500/15 hover:bg-red-500/30 border border-red-500/30 text-red-300 text-[11px] font-medium transition cursor-pointer"
+                                    title="Delete Dish"
+                                >
+                                    <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                    <span>Delete</span>
+                                </button>
+                            </div>` : ''}
+                        </div>
+                    </article>
+                </div>
+                `;
+            }).join("");
+
+            lucide.createIcons();
+        }
+        // Switch 4-angle photo directly on card (updates camera angle & lighting on same table)
+        function switchCardAngle(dishId, angleIdx) {
+            const dish = dishes.find(d => d.id === dishId);
+            if (!dish) return;
+            cardAngleState[dishId] = angleIdx;
+
+            const imgEl = document.getElementById(`img-${dishId}`);
+            const lampEl = document.getElementById(`lamp-${dishId}`);
+            const labelEl = document.getElementById(`angle-label-${dishId}`);
+
+            if (imgEl) {
+                imgEl.classList.remove("cam-angle-0", "cam-angle-1", "cam-angle-2", "cam-angle-3");
+                imgEl.classList.add(`cam-angle-${angleIdx}`);
+                imgEl.src = dish.images[angleIdx] || dish.images[0];
+            }
+            if (lampEl) {
+                lampEl.classList.remove("lamp-angle-0", "lamp-angle-1", "lamp-angle-2", "lamp-angle-3");
+                lampEl.classList.add(`lamp-angle-${angleIdx}`);
+            }
+            if (labelEl) {
+                labelEl.textContent = ANGLE_LABELS[angleIdx];
+            }
+            renderMenu();
+        }
+
+        // 3D Card Tilt Interactions
+        function handleCardTilt(e, cardEl) {
+            const rect = cardEl.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const xc = rect.width / 2;
+            const yc = rect.height / 2;
+            const dx = (x - xc) / xc;
+            const dy = (y - yc) / yc;
+
+            cardEl.classList.remove("resetting");
+            cardEl.style.transform = `perspective(1000px) rotateX(${-dy * 9}deg) rotateY(${dx * 9}deg) translateY(-4px)`;
+
+            const glare = cardEl.querySelector(".card-glare");
+            if (glare) {
+                glare.style.opacity = "1";
+                glare.style.background = `radial-gradient(circle at ${(x / rect.width) * 100}% ${(y / rect.height) * 100}%, rgba(255,255,255,0.18), transparent 60%)`;
+            }
+        }
+
+        function handleCardTouchTilt(e, cardEl) {
+            if (!e.touches || e.touches.length === 0) return;
+            const touch = e.touches[0];
+            const rect = cardEl.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            const xc = rect.width / 2;
+            const yc = rect.height / 2;
+            const dx = (x - xc) / xc;
+            const dy = (y - yc) / yc;
+
+            cardEl.classList.remove("resetting");
+            cardEl.style.transform = `perspective(1000px) rotateX(${-dy * 7}deg) rotateY(${dx * 7}deg) translateY(-2px)`;
+        }
+
+        function resetCardTilt(cardEl) {
+            cardEl.classList.add("resetting");
+            cardEl.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)";
+            const glare = cardEl.querySelector(".card-glare");
+            if (glare) {
+                glare.style.opacity = "0";
+            }
+        }
+
+        // ---------------------------------------------------------
+        // 6. 3D MULTI-ANGLE DISH INSPECTION MODAL + DRAG TO ROTATE
+        // ---------------------------------------------------------
+        let isDraggingModal = false;
+        let modalDragStartX = 0;
+        let modalDragStartY = 0;
+
+        function startModalDrag(e) {
+            isDraggingModal = true;
+            modalDragStartX = e.clientX;
+            modalDragStartY = e.clientY;
+        }
+
+        function onModalDrag(e) {
+            if (!isDraggingModal) return;
+            const dx = e.clientX - modalDragStartX;
+            const dy = e.clientY - modalDragStartY;
+            applyCustomModalPlatterTilt(dx, dy);
+        }
+
+        function startModalTouchDrag(e) {
+            if (!e.touches || e.touches.length === 0) return;
+            isDraggingModal = true;
+            modalDragStartX = e.touches[0].clientX;
+            modalDragStartY = e.touches[0].clientY;
+        }
+
+        function onModalTouchDrag(e) {
+            if (!isDraggingModal || !e.touches || e.touches.length === 0) return;
+            const dx = e.touches[0].clientX - modalDragStartX;
+            const dy = e.touches[0].clientY - modalDragStartY;
+            applyCustomModalPlatterTilt(dx, dy);
+        }
+
+        function applyCustomModalPlatterTilt(dx, dy) {
+            const mainImg = document.getElementById("modal-main-img");
+            if (!mainImg) return;
+            const rotY = Math.max(-24, Math.min(24, dx * 0.14));
+            const rotX = Math.max(-18, Math.min(24, -dy * 0.14));
+            mainImg.style.transition = "none";
+            mainImg.style.transform = `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(1.14)`;
+        }
+
+        function endModalDrag() {
+            if (!isDraggingModal) return;
+            isDraggingModal = false;
+            const mainImg = document.getElementById("modal-main-img");
+            if (mainImg) {
+                mainImg.style.transition = "transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)";
+                mainImg.style.transform = "";
+            }
+        }
+
+        function openDishModal(dishId) {
+            const dish = dishes.find(d => d.id === dishId);
+            if (!dish) return;
+
+            currentModalDishId = dishId;
+            currentModalAngle = cardAngleState[dishId] || 0;
+            currentModalQty = 1;
+
+            document.getElementById("modal-title").textContent = dish.name;
+            document.getElementById("modal-price").textContent = `₹${Number(dish.price).toFixed(0)}`;
+            document.getElementById("modal-desc").textContent = dish.description;
+            document.getElementById("modal-prep").textContent = dish.prepTime || "15 mins";
+            document.getElementById("modal-calories").textContent = dish.calories || "450 kcal";
+            document.getElementById("modal-category-badge").textContent = dish.category;
+            document.getElementById("modal-qty").textContent = "1";
+
+            // Diet Badge
+            const isVeg = dish.diet === "veg";
+            document.getElementById("modal-diet-badge").innerHTML = `
+                <span class="px-2.5 py-0.5 rounded-md border ${isVeg ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400' : 'border-rose-500/40 bg-rose-500/10 text-rose-400'} text-[11px] font-semibold inline-flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full ${isVeg ? 'bg-emerald-400' : 'bg-rose-400'}"></span>
+                    ${isVeg ? 'Pure Veg' : 'Non-Veg'}
+                </span>
+            `;
+
+            // Special Badge
+            const specBadge = document.getElementById("modal-special-badge");
+            if (dish.isSpecial) specBadge.classList.remove("hidden");
+            else specBadge.classList.add("hidden");
+
+            // Availability State
+            const unavailAlert = document.getElementById("modal-unavailable-alert");
+            const orderControls = document.getElementById("modal-order-controls");
+            if (!dish.available) {
+                unavailAlert.classList.remove("hidden");
+                orderControls.classList.add("hidden");
+            } else {
+                unavailAlert.classList.add("hidden");
+                orderControls.classList.remove("hidden");
+            }
+
+            updateModalAngleDisplay(false);
+
+            const modal = document.getElementById("dish-modal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            lucide.createIcons();
+        }
+
+        function closeDishModal() {
+            const modal = document.getElementById("dish-modal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function updateModalAngleDisplay(animate = true) {
+            const dish = dishes.find(d => d.id === currentModalDishId);
+            if (!dish) return;
+
+            const imgUrl = dish.images[currentModalAngle] || dish.images[0];
+            const mainImg = document.getElementById("modal-main-img");
+            const lampGlow = document.getElementById("modal-lamp-glow");
+            const angleName = document.getElementById("modal-angle-name");
+
+            if (mainImg) {
+                if (animate) {
+                    mainImg.style.opacity = "0.3";
+                    setTimeout(() => {
+                        mainImg.src = imgUrl;
+                        mainImg.className = `angle-viewer-frame cam-angle-${currentModalAngle} w-full h-full object-cover`;
+                        mainImg.style.opacity = "1";
+                    }, 180);
+                } else {
+                    mainImg.src = imgUrl;
+                    mainImg.className = `angle-viewer-frame cam-angle-${currentModalAngle} w-full h-full object-cover`;
+                    mainImg.style.opacity = "1";
+                }
+            }
+
+            if (lampGlow) {
+                lampGlow.className = `studio-lamp-glow lamp-angle-${currentModalAngle}`;
+            }
+            if (angleName) {
+                angleName.textContent = `Angle ${currentModalAngle + 1}: ${ANGLE_LABELS[currentModalAngle]}`;
+            }
+
+            // Render Thumbnails
+            const thumbsContainer = document.getElementById("modal-thumbnails");
+            if (thumbsContainer) {
+                thumbsContainer.innerHTML = [0, 1, 2, 3].map(idx => `
+                    <button 
+                        type="button"
+                        onclick="selectModalAngle(${idx})"
+                        class="studio-table-surface relative aspect-[4/3] rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${idx === currentModalAngle ? 'border-gold scale-105 shadow-lg shadow-gold/25' : 'border-white/10 opacity-65 hover:opacity-100'}"
+                    >
+                        <img src="${dish.images[idx] || dish.images[0]}" alt="Angle ${idx + 1}" class="cam-angle-${idx} w-full h-full object-cover">
+                        <span class="absolute bottom-1 right-1 bg-black/80 text-[9px] text-gold-light px-1.5 rounded z-10">0${idx + 1}</span>
+                    </button>
+                `).join("");
+            }
+        }
+
+        function selectModalAngle(idx) {
+            if (idx === currentModalAngle) return;
+            currentModalAngle = idx;
+            cardAngleState[currentModalDishId] = idx;
+            updateModalAngleDisplay(true);
+        }
+
+        function cycleModalAngle(direction) {
+            currentModalAngle = (currentModalAngle + direction + 4) % 4;
+            cardAngleState[currentModalDishId] = currentModalAngle;
+            updateModalAngleDisplay(true);
+        }
+
+        function updateModalQty(delta) {
+            currentModalQty = Math.max(1, currentModalQty + delta);
+            document.getElementById("modal-qty").textContent = currentModalQty;
+        }
+
+        function addFromModalToCart() {
+            if (!currentModalDishId) return;
+            addToCart(currentModalDishId, currentModalQty);
+            closeDishModal();
+        }
+
+        // ---------------------------------------------------------
+        // 7. CUSTOMER ORDER CART & CHECKOUT LOGIC
+        // ---------------------------------------------------------
+        function addToCart(dishId, qty = 1) {
+            const dish = dishes.find(d => d.id === dishId);
+            if (!dish || !dish.available) return;
+
+            const existing = cart.find(item => item.dishId === dishId);
+            if (existing) {
+                existing.qty += qty;
+            } else {
+                cart.push({ dishId: dish.id, qty });
+            }
+
+            updateCartUI();
+            renderMenu();
+            showToast(`Added ${dish.name} to table order`);
+        }
+
+        function updateCartItemQty(dishId, delta) {
+            const idx = cart.findIndex(item => item.dishId === dishId);
+            if (idx === -1) return;
+
+            cart[idx].qty += delta;
+            if (cart[idx].qty <= 0) {
+                cart.splice(idx, 1);
+            }
+            updateCartUI();
+            renderMenu();
+        }
+
+        function updateTableNumber(val) {
+            document.getElementById("header-table-num").textContent = val;
+        }
+
+        function updateCartUI() {
+            const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+            let subtotal = 0;
+
+            const itemsListEl = document.getElementById("cart-items-list");
+            const placeOrderBtn = document.getElementById("place-order-btn");
+
+            if (cart.length === 0) {
+                itemsListEl.innerHTML = `
+                    <div class="text-center py-10 px-4 border border-dashed border-white/10 rounded-2xl">
+                        <i data-lucide="shopping-bag" class="w-8 h-8 text-gray-600 mx-auto mb-2"></i>
+                        <p class="text-xs text-gray-400">Your table order is currently empty.</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Explore the 3D menu to add dishes.</p>
+                    </div>
+                `;
+                placeOrderBtn.disabled = true;
+            } else {
+                placeOrderBtn.disabled = false;
+                itemsListEl.innerHTML = cart.map(item => {
+                    const dish = dishes.find(d => d.id === item.dishId);
+                    if (!dish) return "";
+                    const lineTotal = dish.price * item.qty;
+                    subtotal += lineTotal;
+
+                    return `
+                    <div class="glass-panel rounded-2xl p-3 flex items-center gap-3">
+                        <img src="${dish.images[0]}" alt="${dish.name}" class="w-14 h-14 rounded-xl object-cover shrink-0 border border-white/10">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-xs font-bold text-white truncate">${dish.name}</h4>
+                            <p class="text-[11px] text-gold font-semibold mt-0.5">₹${lineTotal.toFixed(0)}</p>
+                        </div>
+                        <div class="flex items-center gap-2 bg-obsidian rounded-xl p-1 border border-white/10">
+                            <button onclick="updateCartItemQty('${dish.id}', -1)" class="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer">-</button>
+                            <span class="text-xs font-bold text-white w-4 text-center">${item.qty}</span>
+                            <button onclick="updateCartItemQty('${dish.id}', 1)" class="w-6 h-6 rounded-lg bg-gold text-obsidian text-xs font-bold cursor-pointer">+</button>
+                        </div>
+                    </div>
+                    `;
+                }).join("");
+            }
+
+            const tax = Math.round(subtotal * 0.05);
+            const total = subtotal + tax;
+
+            document.getElementById("top-cart-badge").textContent = totalItems;
+            document.getElementById("cart-subtotal").textContent = `₹${subtotal.toFixed(0)}`;
+            document.getElementById("cart-tax").textContent = `₹${tax.toFixed(0)}`;
+            document.getElementById("cart-total").textContent = `₹${total.toFixed(0)}`;
+
+            // Floating Bottom Cart Bar
+            const floatBar = document.getElementById("floating-cart-bar");
+            if (totalItems > 0) {
+                document.getElementById("float-cart-count").textContent = totalItems;
+                document.getElementById("float-cart-total").textContent = `₹${total.toFixed(0)}`;
+                document.getElementById("float-cart-items-preview").textContent = `${totalItems} ${totalItems === 1 ? 'dish' : 'dishes'} selected • Table ${document.getElementById("table-number-select").value}`;
+                floatBar.classList.remove("translate-y-28", "opacity-0", "pointer-events-none");
+            } else {
+                floatBar.classList.add("translate-y-28", "opacity-0", "pointer-events-none");
+            }
+
+            lucide.createIcons();
+        }
+
+        function openCartDrawer() {
+            const drawer = document.getElementById("cart-drawer");
+            drawer.classList.remove("hidden");
+            drawer.classList.add("flex");
+        }
+
+        function closeCartDrawer() {
+            const drawer = document.getElementById("cart-drawer");
+            drawer.classList.add("hidden");
+            drawer.classList.remove("flex");
+        }
+
+        function placeTableOrder() {
+            if (cart.length === 0) return;
+
+            const customerName = document.getElementById("customer-name-input").value.trim();
+            if (!customerName) {
+                showToast("Please enter your name before ordering!");
+                document.getElementById("customer-name-input").focus();
+                return;
+            }
+
+            const tableNum = document.getElementById("table-number-select").value;
+            const notes = document.getElementById("kitchen-notes-input").value.trim();
+            const orderId = `#TRP-${Math.floor(100 + Math.random() * 900)}`;
+
+            let subtotal = 0;
+            let whatsappItemsText = "";
+
+            const summaryHTML = cart.map(item => {
+                const dish = dishes.find(d => d.id === item.dishId);
+                const lineTotal = dish.price * item.qty;
+                subtotal += lineTotal;
+                whatsappItemsText += `• ${item.qty}x ${dish.name} (₹${lineTotal.toFixed(0)})\n`;
+                return `
+                    <div class="flex justify-between text-xs py-1 border-b border-white/5 last:border-0">
+                        <span class="text-gray-200"><strong class="text-gold">${item.qty}x</strong> ${dish.name}</span>
+                        <span class="text-gray-300 font-medium">₹${lineTotal.toFixed(0)}</span>
+                    </div>
+                `;
+            }).join("") + (notes ? `<div class="pt-2 text-[11px] text-gold-light italic">Note: "${notes}"</div>` : "");
+
+            const tax = Math.round(subtotal * 0.05);
+            const total = subtotal + tax;
+
+            // Construct WhatsApp Message for +91 9883656401 with customer name & instructions
+            const waNumber = "919883656401";
+            const waMessage = 
+`👑 *NEW TABLE ORDER - THE ROYAL PLATE* 👑
+--------------------------------
+🧾 *Order ID:* ${orderId}
+👤 *Customer Name:* ${customerName}
+📍 *Table Number:* Table ${tableNum}
+--------------------------------
+🍽️ *Dishes Ordered:*
+${whatsappItemsText}--------------------------------
+💵 *Subtotal:* ₹${subtotal.toFixed(0)}
+📊 *GST (5%):* ₹${tax.toFixed(0)}
+💰 *Total Payable:* *₹${total.toFixed(0)}*
+${notes ? `💬 *Special Instructions / Notice:* ${notes}\n` : ''}--------------------------------
+💳 *Payment Notice:* Customer is scanning the restaurant UPI QR code to pay online. Please verify payment upon delivery/serving.`;
+
+            const encodedWaUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`;
+
+            // Set receipt details
+            document.getElementById("receipt-order-id").textContent = orderId;
+            document.getElementById("receipt-table").textContent = `Table ${tableNum} (${customerName})`;
+            document.getElementById("receipt-summary-list").innerHTML = summaryHTML;
+            document.getElementById("receipt-total").textContent = `₹${total.toFixed(0)}`;
+            
+            // Set WhatsApp link
+            document.getElementById("whatsapp-direct-link").href = encodedWaUrl;
+
+            // Set uploaded payment QR code image
+            const paymentQrImg = document.getElementById("payment-qr-img");
+            paymentQrImg.src = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80";
+
+            // Clear cart
+            cart = [];
+            document.getElementById("kitchen-notes-input").value = "";
+            document.getElementById("customer-name-input").value = "";
+            updateCartUI();
+            renderMenu();
+            closeCartDrawer();
+
+            const successModal = document.getElementById("order-success-modal");
+            successModal.classList.remove("hidden");
+            successModal.classList.add("flex");
+            lucide.createIcons();
+
+            // Automatically open WhatsApp in new tab / window to instantly send the order
+            window.open(encodedWaUrl, "_blank");
+        }
+
+        function closeOrderSuccessModal() {
+            const successModal = document.getElementById("order-success-modal");
+            successModal.classList.add("hidden");
+            successModal.classList.remove("flex");
+        }
+
+        // ---------------------------------------------------------
+        // 8. SECRET OWNER LOGIN & ADMIN PORTAL CONTROLS
+        // ---------------------------------------------------------
+        function openLoginModal() {
+            if (isOwnerMode) {
+                showToast("Owner Mode is already unlocked!");
+                return;
+            }
+            document.getElementById("owner-password-input").value = "";
+            document.getElementById("login-error-msg").classList.add("hidden");
+            const modal = document.getElementById("login-modal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            setTimeout(() => document.getElementById("owner-password-input").focus(), 100);
+        }
+
+        function closeLoginModal() {
+            const modal = document.getElementById("login-modal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function handleOwnerLogin(e) {
+            e.preventDefault();
+            const entered = document.getElementById("owner-password-input").value;
+            if (entered === OWNER_SECRET_PASS) {
+                isOwnerMode = true;
+                sessionStorage.setItem(STORAGE_KEY_OWNER, "true");
+                closeLoginModal();
+                syncOwnerUI();
+                renderMenu();
+                showToast("Owner Portal Unlocked! Live controls enabled.");
+            } else {
+                document.getElementById("login-error-msg").classList.remove("hidden");
+            }
+        }
+
+        function logoutOwner() {
+            isOwnerMode = false;
+            sessionStorage.removeItem(STORAGE_KEY_OWNER);
+            syncOwnerUI();
+            renderMenu();
+            showToast("Exited Owner Mode");
+        }
+
+        // Toggle Available / Not Available on any dish
+        function toggleDishAvailability(dishId) {
+            const dish = dishes.find(d => d.id === dishId);
+            if (!dish) return;
+            dish.available = !dish.available;
+
+            // Remove from active cart if marked unavailable
+            if (!dish.available) {
+                cart = cart.filter(c => c.dishId !== dishId);
+                updateCartUI();
+            }
+
+            saveDishesToStorage();
+            renderMenu();
+            showToast(`${dish.name} marked as ${dish.available ? 'Available' : 'Not Available'}`);
+        }
+
+        // Add New Dish Modal & 4-Angle FileReader/URL Handlers
+        function openAddDishModal() {
+            const modal = document.getElementById("add-dish-modal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            lucide.createIcons();
+        }
+
+        function closeAddDishModal() {
+            const modal = document.getElementById("add-dish-modal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function updateAnglePreview(angleNum, url) {
+            const preview = document.getElementById(`preview-angle-${angleNum}`);
+            if (preview && url.trim()) {
+                preview.src = url.trim();
+            }
+        }
+
+        function handleAngleFileUpload(event, angleNum) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result;
+                document.getElementById(`url-angle-${angleNum}`).value = base64Data;
+                document.getElementById(`preview-angle-${angleNum}`).src = base64Data;
+                showToast(`Angle ${angleNum} photo loaded!`);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleAddNewDish(e) {
+            e.preventDefault();
+
+            const name = document.getElementById("new-dish-name").value.trim();
+            const price = parseFloat(document.getElementById("new-dish-price").value);
+            const category = document.getElementById("new-dish-category").value;
+            const diet = document.getElementById("new-dish-diet").value;
+            const isSpecial = document.getElementById("new-dish-special").checked;
+            const prepTime = document.getElementById("new-dish-prep").value.trim() || "18 mins";
+            const calories = document.getElementById("new-dish-cal").value.trim() || "500 kcal";
+            const description = document.getElementById("new-dish-desc").value.trim();
+
+            const img1 = document.getElementById("url-angle-1").value.trim();
+            const img2 = document.getElementById("url-angle-2").value.trim() || img1;
+            const img3 = document.getElementById("url-angle-3").value.trim() || img1;
+            const img4 = document.getElementById("url-angle-4").value.trim() || img1;
+
+            const newDish = {
+                id: "dish-" + Date.now(),
+                name,
+                category,
+                diet,
+                price,
+                prepTime,
+                calories,
+                isSpecial,
+                available: true,
+                description,
+                images: [img1, img2, img3, img4]
+            };
+
+            dishes.unshift(newDish);
+            saveDishesToStorage();
+            renderMenu();
+            closeAddDishModal();
+
+            // Reset text fields for next entry
+            document.getElementById("new-dish-name").value = "";
+            document.getElementById("new-dish-price").value = "";
+            document.getElementById("new-dish-desc").value = "";
+            document.getElementById("new-dish-special").checked = false;
+
+            showToast(`"${name}" published to 3D Menu!`);
+        }
+
+        // Custom Confirmation Dialog for Delete & Reset
+        let pendingConfirmAction = null;
+
+        function openConfirmDialog(title, message, onConfirm) {
+            document.getElementById("confirm-title").textContent = title;
+            document.getElementById("confirm-message").textContent = message;
+            pendingConfirmAction = onConfirm;
+
+            const dialog = document.getElementById("confirm-dialog");
+            dialog.classList.remove("hidden");
+            dialog.classList.add("flex");
+        }
+
+        function closeConfirmDialog() {
+            const dialog = document.getElementById("confirm-dialog");
+            dialog.classList.add("hidden");
+            dialog.classList.remove("flex");
+            pendingConfirmAction = null;
+        }
+
+        document.getElementById("confirm-yes-btn").addEventListener("click", () => {
+            if (typeof pendingConfirmAction === "function") {
+                pendingConfirmAction();
+            }
+            closeConfirmDialog();
+        });
+
+        function confirmDeleteDish(dishId, dishName) {
+            openConfirmDialog(
+                "Remove Dish?",
+                `Are you sure you want to permanently remove "${dishName}" from the menu?`,
+                () => {
+                    dishes = dishes.filter(d => d.id !== dishId);
+                    cart = cart.filter(c => c.dishId !== dishId);
+                    saveDishesToStorage();
+                    updateCartUI();
+                    renderMenu();
+                    showToast(`Removed "${dishName}"`);
+                }
+            );
+        }
+
+        function confirmResetMenu() {
+            openConfirmDialog(
+                "Restore Royal Plate Menu?",
+                "This will restore all 18 original dishes from The Royal Plate menu and clear custom edits.",
+                () => {
+                    dishes = JSON.parse(JSON.stringify(DEFAULT_DISHES));
+                    saveDishesToStorage();
+                    renderMenu();
+                    showToast("The Royal Plate 18-dish menu restored");
+                }
+            );
+        }
+
+        // Toast Helper
+        let toastTimer = null;
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            document.getElementById("toast-msg").textContent = message;
+            toast.classList.remove("opacity-0", "-translate-y-4");
+            toast.classList.add("opacity-100", "translate-y-0");
+
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.add("opacity-0", "-translate-y-4");
+                toast.classList.remove("opacity-100", "translate-y-0");
+            }, 2600);
+        }
+    </script>
+</body>
+</html>
